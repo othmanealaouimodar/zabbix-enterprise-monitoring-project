@@ -1,0 +1,41 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - name: 'Templates/Operating Systems'
+  templates:
+    - template: 'Template Custom Windows Node'
+      name: 'Template Custom Windows Node'
+      description: 'Active agent monitoring for Windows Servers and Static PCs.'
+      groups:
+        - name: 'Templates/Operating Systems'
+      items:
+        - name: 'CPU utilization'
+          key: 'system.cpu.util[,_Total]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          tags:
+            - tag: component
+              value: cpu
+        - name: 'Free disk space on C:'
+          key: 'vfs.fs.size[C:,pfree]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          tags:
+            - tag: component
+              value: storage
+        - name: 'Available memory'
+          key: 'vm.memory.size[available]'
+          history: 7d
+          units: B
+          tags:
+            - tag: component
+              value: memory
+      triggers:
+        - expression: 'min(/Template Custom Windows Node/system.cpu.util[,_Total],5m)>90'
+          name: 'High CPU utilization (over 90% for 5m)'
+          priority: HIGH
+        - expression: 'max(/Template Custom Windows Node/vfs.fs.size[C:,pfree],5m)<10'
+          name: 'Free disk space is less than 10% on volume C:'
+          priority: HIGH
