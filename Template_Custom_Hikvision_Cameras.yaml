@@ -1,0 +1,38 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - name: 'Templates/Video Surveillance'
+  templates:
+    - template: 'Template Custom Hikvision Camera'
+      name: 'Template Custom Hikvision Camera'
+      description: 'Custom agent-less monitoring for Hikvision IP Cameras via ICMP.'
+      groups:
+        - name: 'Templates/Video Surveillance'
+      items:
+        - name: 'ICMP ping availability'
+          type: SIMPLE
+          key: icmpping
+          history: 7d
+          valuemap:
+            name: 'Service state'
+          tags:
+            - tag: component
+              value: network
+        - name: 'ICMP response time'
+          type: SIMPLE
+          key: icmppingsec
+          history: 7d
+          value_type: FLOAT
+          units: s
+          tags:
+            - tag: component
+              value: network
+      triggers:
+        - expression: 'max(/Template Custom Hikvision Camera/icmpping,#3)=0'
+          name: 'Hikvision Camera is Unreachable'
+          priority: HIGH
+          description: 'The camera has not responded to ping for 3 consecutive checks.'
+        - expression: 'min(/Template Custom Hikvision Camera/icmppingsec,5m)>0.15'
+          name: 'Camera Network latency is too high'
+          priority: WARNING
+          description: 'Ping response time is over 150ms for the last 5 minutes.'
